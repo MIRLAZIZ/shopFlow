@@ -1,4 +1,3 @@
-import { Unit } from "chart.js/dist/scales/scale.time"
 import { PriceHistory } from "./price-history.interface"
 
 
@@ -7,10 +6,10 @@ export interface Product {
     name: string
     barcode: string
     quick_code: string | null
-    max_quantity_notification: number
+    max_quantity_notification: number | null
     price_history: PriceHistory[]
     quantity: number
     isLowStock: boolean
-    unit: Unit
+    unit: null | number
     price_mode: string
 }

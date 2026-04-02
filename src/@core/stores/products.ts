@@ -13,6 +13,14 @@ export const useProductsStore = defineStore('products', {
                 this.products = response.data
             })
 
-        }
+        },
+        async createProduct(data: any) {
+            const response = await $api("/products", {
+                method: "post",
+                body: data,
+            })
+            return response
+        },
+
     }
 })

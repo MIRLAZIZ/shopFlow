@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useUnitsStore } from '@/@core/stores/units';
+// import { useUnitsStore } from '@/@core/stores/units';
+import { useCategoriesStore } from '@/@core/stores/categories';
 import { ToastService } from '@/services/toast.service';
-import { $api } from '@/utils/api';
-import AppScrollbar from '@/views/unit/AppScrollbar.vue';
+import AddEdit from '@/views/categories/addEdit.vue';
 import { VDataTable } from 'vuetify/lib/labs/components.mjs';
 
 
-const store = useUnitsStore()
+const store = useCategoriesStore()
 const isDrawerOpen = ref(false)
 const delateModal = ref(false)
 const itemId = ref<number | null>(null)
@@ -19,7 +19,7 @@ const { t } = useI18n()
 
 const refresh = () => {
     loading.value = true
-    store.fetchUnits().then(() => { loading.value = false }).catch((error) => {
+    store.fetchcategories().then(() => { loading.value = false }).catch((error) => {
         ToastService.error(error.response._data.message)
         loading.value = false
     })
@@ -43,7 +43,6 @@ definePage({
 const headers = computed(() => [
     { title: t('headers.number'), sortable: false, key: 'id' },
     { title: t('headers.name'), key: 'name' },
-    { title: t('headers.label'), key: 'label' },
     { title: t('headers.actions'), key: 'actions', sortable: false },
 ])
 
@@ -54,9 +53,9 @@ onMounted(() => {
 
 const deleteUnit = () => {
     if (!itemId.value) return
-    store.deleteUnit(itemId.value).then(() => {
+    store.deleteCategory(itemId.value).then(() => {
         refresh()
-        ToastService.success(t('unit.delete'))
+        ToastService.success(t('success'))
         delateModal.value = false
 
     })
@@ -86,8 +85,8 @@ const deleteUnit = () => {
 </script>
 
 <template>
-    <VBtn @click="$api('https://jsonplaceholder.typicode.com/todos/1')">sorov</VBtn>
-    <VCard :title="t('unit.title')" class="mb-6">
+
+    <VCard :title="t('categorys.title')" class="mb-6">
         <VCardText>
             <VRow>
                 <VCol cols="12" md="6">
@@ -106,7 +105,7 @@ const deleteUnit = () => {
 
 
 
-    <VDataTable :headers="headers" :items="store.units" :search="serch" :loading :no-data-text="t('no_data')">
+    <VDataTable :headers="headers" :items="store.categories" :search="serch" :loading :no-data-text="t('no_data')">
 
 
         <template #item.id="{ item, index }">
@@ -152,7 +151,7 @@ const deleteUnit = () => {
 
     </VDataTable>
 
-    <AppScrollbar :isDrawerOpen="isDrawerOpen" @update:isDrawerOpen="isDrawerOpen = $event" :fields="customerFields"
+    <AddEdit :isDrawerOpen="isDrawerOpen" @update:isDrawerOpen="isDrawerOpen = $event" :fields="customerFields"
         @refresh="refresh" :editItem="itemEdit" @update:editItem="itemEdit = $event" />
 
     <DelateDialog v-model:delate-modal="delateModal" @delete-element="deleteUnit" />

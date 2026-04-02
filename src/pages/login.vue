@@ -130,6 +130,8 @@ const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
           </p>
         </VCardText>
         <VCardText>
+
+
           <VForm ref="refLogin" @submit.prevent="sendLogin">
             <VRow>
               <!-- email -->

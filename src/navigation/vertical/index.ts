@@ -19,8 +19,15 @@ export default [
   },
 
   {
-    title: 'units.title',
+    title: 'unit.title',
     to: { name: 'units' },
+    icon: { icon: 'tabler-package' },
+    action: 'read',
+    subject: 'Dashboard'
+  },
+  {
+    title: 'categorys.title',
+    to: { name: 'categories' },
     icon: { icon: 'tabler-package' },
     action: 'read',
     subject: 'Dashboard'

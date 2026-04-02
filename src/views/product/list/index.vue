@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Product } from '@/interface/products.interface'
 import { TableHeader } from '@/interface/table-headers.interface'
+import { router } from '@/plugins/1.router'
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
 const widgetData = ref([
@@ -16,6 +17,8 @@ const porps = defineProps({
     required: true,
   },
 })
+const { t } = useI18n()
+
 
 //  id: number
 //     name: string
@@ -215,7 +218,7 @@ const deleteProduct = async (id: number) => {
             Export
           </VBtn>
 
-          <VBtn color="primary" prepend-icon="tabler-plus">
+          <VBtn color="primary" prepend-icon="tabler-plus" @click="router.push('products/create')">
             Add Product
           </VBtn>
         </div>
@@ -225,7 +228,8 @@ const deleteProduct = async (id: number) => {
 
       <!-- 👉 Datatable  -->
       <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:page="page" :headers="headers" show-select
-        :items="porps.products.data" :items-length="totalProduct" class="text-no-wrap" @update:options="updateOptions">
+        :items="porps.products.data" :items-length="totalProduct" class="text-no-wrap" @update:options="updateOptions"
+        :no-data-text="t('no_ data')">
         <!-- product  -->
         <template #item.unit="{ item }">
           <span class="text-body-1 font-weight-medium">{{ item.unit.name }}</span>

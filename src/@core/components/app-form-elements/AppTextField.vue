@@ -12,36 +12,28 @@ const elementId = computed(() => {
 })
 
 const label = computed(() => useAttrs().label as string | undefined)
+
+const isRequired = computed(() => {
+  const rules = useAttrs().rules as Array<Function> | undefined
+  if (!rules) return false
+  return rules.some(fn => fn === undefined ? false : fn.name === 'requiredValidator')
+})
 </script>
 
 <template>
-  <div
-    class="app-text-field flex-grow-1"
-    :class="$attrs.class"
-  >
-    <VLabel
-      v-if="label"
-      :for="elementId"
-      class="mb-1 text-body-2 text-high-emphasis"
-      :text="label"
-    />
-    <VTextField
-      v-bind="{
-        ...$attrs,
-        class: null,
-        label: undefined,
-        variant: 'outlined',
-        id: elementId,
-      }"
-    >
-      <template
-        v-for="(_, name) in $slots"
-        #[name]="slotProps"
-      >
-        <slot
-          :name="name"
-          v-bind="slotProps || {}"
-        />
+  <div class="app-text-field flex-grow-1" :class="$attrs.class">
+    <VLabel v-if="label" :for="elementId" class="mb-1 text-body-2 text-high-emphasis">
+      <span>{{ label }}</span><b v-if="isRequired" class="text-error ml-1">*</b>
+    </VLabel>
+    <VTextField v-bind="{
+      ...$attrs,
+      class: null,
+      label: undefined,
+      variant: 'outlined',
+      id: elementId,
+    }">
+      <template v-for="(_, name) in $slots" #[name]="slotProps">
+        <slot :name="name" v-bind="slotProps || {}" />
       </template>
     </VTextField>
   </div>
