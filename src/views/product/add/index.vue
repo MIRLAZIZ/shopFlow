@@ -3,23 +3,30 @@
 import { useCategoriesStore } from '@/@core/stores/categories'
 import { useProductsStore } from '@/@core/stores/products'
 import { useUnitsStore } from '@/@core/stores/units'
-import { ToastService } from '@/services/toast.service'
+// import { useFormattedInput } from '@/composables/useFormattedInput'
+import { useToastStore } from '@/@core/stores/toast.store'
+import CurrencyInput from '@/components/CurrencyInput.vue'
 import { requiredValidator } from '@core/utils/validators'
 import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { VForm } from 'vuetify/lib/components/index.mjs'
+
+
 
 
 const unitStore = useUnitsStore()
 const categoryStore = useCategoriesStore()
 const productStore = useProductsStore()
 const router = useRouter()
+const toastStore = useToastStore()
+const route = useRoute()
+const productId = (route.params as { id: string }).id
 
 
-
-const form = ref({
-  name: '',
-  barcode: '',
-  quick_code: '',
+const productForm = ref({
+  name: null,
+  barcode: null,
+  quick_code: null,
   max_quantity_notification: null as number | null,
   quantity: null as number | null,
   unit_id: null as number | null,
@@ -34,29 +41,23 @@ const form = ref({
 const isLoading = ref(false)
 const formRef = ref<InstanceType<typeof VForm> | null>(null)
 
-
-
-
-
-
-
 onMounted(() => {
   unitStore.fetchUnits()
   categoryStore.fetchcategories()
 })
 
 
-const closeNavigationDrawer = () => {
+const closeNavigationDrawer = async () => {
   formRef.value?.resetValidation()
-  router.push('/products')
+  await router.push('/products')
 }
 
 
 const computedCostPrice = computed(() => {
-  const purchase = form.value.purchase_price ?? 0
-  const delivery = form.value.deliveryCost ?? 0
-  const vat = form.value.vatRate ?? 0
-  const quantity = form.value.quantity ?? 0
+  const purchase = productForm.value.purchase_price ?? 0
+  const delivery = productForm.value.deliveryCost ?? 0
+  const vat = productForm.value.vatRate ?? 0
+  const quantity = productForm.value.quantity ?? 0
 
   if (!purchase && !quantity) return 0
 
@@ -76,26 +77,71 @@ const saveProduct = () => {
 
     if (valid) {
 
+
       isLoading.value = true
-      productStore.createProduct(form.value).then(() => {
-        isLoading.value = false
-        ToastService.success('Mahsulot muvaffaqiyatli qo\'shildi')
-        closeNavigationDrawer()
-      }).catch((error) => {
-        isLoading.value = false
-        ToastService.error(error.response._data.message)
-      })
+
+      if (productId) {
+
+        productStore.createProduct(productForm.value).then(() => {
+          isLoading.value = false
+          closeNavigationDrawer()
+            .then(() => {
+              toastStore.success('Mahsulot muvaffaqiyatli qo\'shildi')
+
+            })
+
+        }).catch((error) => {
+          isLoading.value = false
+          toastStore.error(error.response._data.message)
+        })
+
+      } else {
+
+        const obj = {
+          name: 'mirlaziz',
+          age: null
+
+        }
+
+        const filteredObj = Object.fromEntries(
+          Object.entries(obj).filter(([key, value]) => value !== null)
+        );
+        console.log(filteredObj);
+
+
+
+
+
+        // productStore.updataProduct(Number(productId), productForm.value).then(() => {
+        //   isLoading.value = false
+        //   closeNavigationDrawer()
+        //     .then(() => {
+        //       toastStore.success('Mahsulot muvaffaqiyatli qo\'shildi')
+
+        //     })
+
+        // }).catch((error) => {
+        //   isLoading.value = false
+        //   toastStore.error(error.response._data.message)
+        // })
+
+      }
+
 
     }
+
 
   })
 
 
 }
+
+
 </script>
 
 <template>
   <div>
+    {{ productId }}
     <div class="d-flex flex-column justify-center">
       <h4 class="text-h4 font-weight-medium">
         Yangi mahsulot qo'shish
@@ -106,29 +152,52 @@ const saveProduct = () => {
 
     <VForm ref="formRef" class="mt-6" @submit.prevent="saveProduct">
       <VRow>
-        <!-- ─── Chap ustun ─────────────────────────────────── -->
 
-        <VCol cols="12" md="8">
+        <VCol cols="12">
 
           <!-- Asosiy ma'lumotlar -->
-          <VCard class="mb-6" title="Asosiy ma'lumotlar">
+          <VCard class="mb-12" title="Asosiy ma'lumotlar">
             <VCardText>
               <VRow>
                 <!-- Nomi -->
-                <VCol cols="12">
-                  <AppTextField v-model="form.name" label="Mahsulot nomi" placeholder="Masalan: Coca-Cola 0.5L"
+                <VCol cols="12" md="6">
+                  <AppTextField v-model="productForm.name" label="Mahsulot nomi" placeholder="Masalan: Coca-Cola 0.5L"
                     :rules="[requiredValidator]" />
+                </VCol>
+
+                <!-- categorya -->
+                <VCol cols="12" md="6">
+                  <AppSelect v-model="productForm.category_id" :items="categoryStore.categories" label="Kategoriya"
+                    placeholder="Tanlang" item-title="name" item-value="id" :rules="[requiredValidator]" />
+
                 </VCol>
 
                 <!-- Barcode -->
                 <VCol cols="12" md="6">
-                  <AppTextField v-model="form.barcode" label="Barcode" placeholder="0123-4567" />
+                  <AppTextField v-model="productForm.barcode" label="Barcode" placeholder="0123-4567" />
                 </VCol>
 
                 <!-- Quick code -->
                 <VCol cols="12" md="6">
-                  <AppTextField v-model="form.quick_code" label="Tez kod" placeholder="A1, B2, 99..."
+                  <AppTextField v-model="productForm.quick_code" label="Tez kod" placeholder="A1, B2, 99..."
                     hint="Tez sotish uchun qisqa kod" persistent-hint />
+                </VCol>
+
+
+
+
+
+                <!-- Birlik -->
+                <VCol cols="12" md="6">
+                  <AppSelect v-model="productForm.unit_id" :items="unitStore.units" label="Birlik" placeholder="Tanlang"
+                    item-title="name" item-value="id" :rules="[requiredValidator]" />
+                </VCol>
+
+                <!-- Minimum qoldiq -->
+                <VCol cols="12" md="6">
+
+                  <CurrencyInput v-model="productForm.max_quantity_notification" placeholder="0"
+                    label="Minimum qoldiq (ogohlantirish)" />
                 </VCol>
               </VRow>
             </VCardText>
@@ -138,40 +207,48 @@ const saveProduct = () => {
 
 
           <!------------------------------------ Narx ma'lumotlari ------------------------------------>
-          <VCard title="Narx ma'lumotlari">
+          <VCard title="Narx ma'lumotlari" v-if="!productId">
             <VCardText>
               <VRow>
 
-                <!-- miqdori  -->
-                <VCol cols="12" md="6">
-                  <AppTextField v-model.number="form.quantity" label="Miqdori" placeholder="0" type="number" min="0"
-                    :rules="[requiredValidator]" />
-                </VCol>
 
 
                 <!-- Xarid narxi -->
-                <VCol cols="12" md="6" mt-md="6">
-                  <AppTextField v-model.number="form.purchase_price" label="Xarid narxi" placeholder="0" type="number"
-                    min="0" :rules="[requiredValidator]" />
+                <VCol cols="12" md="6">
+                  <CurrencyInput v-model="productForm.purchase_price" placeholder="0" label="Xarid narxi"
+                    :rules="[requiredValidator]" />
                 </VCol>
 
 
 
                 <!-- Delivery narxi -->
                 <VCol cols="12" md="6">
-                  <AppTextField v-model.number="form.deliveryCost" label="Delivery narxi" placeholder="0"
-                    type="number" />
+
+
+                  <CurrencyInput v-model="productForm.deliveryCost" placeholder="0" label="Delivery narxi" />
+                </VCol>
+
+
+                <!-- miqdori  -->
+                <VCol cols="12" md="6">
+
+
+                  <CurrencyInput v-model="productForm.quantity" placeholder="0" label="Miqdori"
+                    :rules="[requiredValidator]" />
+                </VCol>
+
+
+                <!-- Sotuv narxi -->
+                <VCol cols="12" md="6">
+
+                  <CurrencyInput v-model="productForm.selling_price" placeholder="0" label="Sotuv narxi"
+                    :rules="[requiredValidator]" />
+
                 </VCol>
 
                 <!-- Vat rate -->
                 <VCol cols="12" md="6">
-                  <AppTextField v-model.number="form.vatRate" label="VAT rate" placeholder="0" type="number" />
-                </VCol>
-                <!-- Sotuv narxi -->
-                <VCol cols="12" md="6">
-                  <AppTextField v-model.number="form.selling_price" label="Sotuv narxi" placeholder="sotuv narxi"
-                    type="number" :rules="[requiredValidator]" />
-
+                  <CurrencyInput v-model="productForm.vatRate" placeholder="0" label="Vat rate" />
                 </VCol>
 
                 <!-- cost price  -->
@@ -196,10 +273,7 @@ const saveProduct = () => {
 
 
 
-                <!-- Narx rejimi -->
-                <!-- <VCol cols="12">
-                <AppSelect v-model="form.price_mode" :items="PRICE_MODES" label="Narx rejimi" />
-              </VCol> -->
+
               </VRow>
             </VCardText>
           </VCard>
@@ -210,41 +284,10 @@ const saveProduct = () => {
 
 
 
-        <!-- ─── O'ng ustun ─────────────────────────────────── -->
-        <VCol cols="12" md="4">
 
-          <!-- Miqdor -->
-          <VCard class="mb-6" title="Miqdor">
-            <VCardText>
-              <VRow>
-                <!-- Birlik -->
-                <VCol cols="12">
-                  <AppSelect v-model="form.unit_id" :items="unitStore.units" label="Birlik" placeholder="Tanlang"
-                    item-title="name" item-value="id" :rules="[requiredValidator]" />
-                </VCol>
-
-
-
-                <!-- Minimum qoldiq -->
-                <VCol cols="12">
-                  <AppTextField v-model.number="form.max_quantity_notification" label="Minimum qoldiq (ogohlantirish)"
-                    placeholder="0" type="number" hint="Shu miqdordan kamayganda ogohlantirish beradi"
-                    persistent-hint />
-                </VCol>
-              </VRow>
-            </VCardText>
-          </VCard>
-
-          <!-- Kategoriya -->
-          <VCard title="Kategoriya">
-            <VCardText>
-              <AppSelect v-model="form.category_id" :items="categoryStore.categories" label="Kategoriya"
-                placeholder="Tanlang" item-title="name" item-value="id" :rules="[requiredValidator]" />
-            </VCardText>
-          </VCard>
-
-        </VCol>
       </VRow>
+
+
       <!-- ─── Header ─────────────────────────────────────────── -->
       <div class="d-flex flex-wrap     justify-end  gap-y-4 gap-x-6 mb-6">
 

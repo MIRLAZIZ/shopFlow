@@ -8,7 +8,7 @@ import { VDataTable } from 'vuetify/lib/labs/components.mjs';
 
 const store = useCategoriesStore()
 const isDrawerOpen = ref(false)
-const delateModal = ref(false)
+const deleteModal = ref(false)
 const itemId = ref<number | null>(null)
 const itemEdit = ref<{ id: number, name: string, label: string } | undefined>(undefined)
 const serch = ref('')
@@ -56,7 +56,7 @@ const deleteUnit = () => {
     store.deleteCategory(itemId.value).then(() => {
         refresh()
         ToastService.success(t('success'))
-        delateModal.value = false
+        deleteModal.value = false
 
     })
         .catch((error) => {
@@ -64,22 +64,7 @@ const deleteUnit = () => {
         })
 }
 
-// const page = ref(1)
-// const itemsPerPage = ref(5)
-// const totalOrder = ref(100)
 
-// const computedMoreList = (id: number) => {
-//     return [
-//         {
-//             title: 'Edit',
-//             to: `/units/${id}`,
-//         },
-//         {
-//             title: 'Delete',
-//             to: `/units/${id}`,
-//         },
-//     ]
-// }
 
 
 </script>
@@ -122,7 +107,7 @@ const deleteUnit = () => {
 
 
 
-                <IconBtn @click="delateModal = true, itemId = item.id">
+                <IconBtn @click="deleteModal = true, itemId = item.id">
                     <VIcon icon="tabler-trash" color="error" />
                 </IconBtn>
 
@@ -154,5 +139,5 @@ const deleteUnit = () => {
     <AddEdit :isDrawerOpen="isDrawerOpen" @update:isDrawerOpen="isDrawerOpen = $event" :fields="customerFields"
         @refresh="refresh" :editItem="itemEdit" @update:editItem="itemEdit = $event" />
 
-    <DelateDialog v-model:delate-modal="delateModal" @delete-element="deleteUnit" />
+    <DelateDialog v-model:delete-modal="deleteModal" @delete-element="deleteUnit" />
 </template>

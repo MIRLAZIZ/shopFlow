@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { useUnitsStore } from '@/@core/stores/units';
 import { ToastService } from '@/services/toast.service';
-import { $api } from '@/utils/api';
 import AppScrollbar from '@/views/unit/AppScrollbar.vue';
 import { VDataTable } from 'vuetify/lib/labs/components.mjs';
 
 
 const store = useUnitsStore()
 const isDrawerOpen = ref(false)
-const delateModal = ref(false)
+const deleteModal = ref(false)
 const itemId = ref<number | null>(null)
 const itemEdit = ref<{ id: number, name: string, label: string } | undefined>(undefined)
 const serch = ref('')
@@ -57,7 +56,7 @@ const deleteUnit = () => {
     store.deleteUnit(itemId.value).then(() => {
         refresh()
         ToastService.success(t('unit.delete'))
-        delateModal.value = false
+        deleteModal.value = false
 
     })
         .catch((error) => {
@@ -86,7 +85,6 @@ const deleteUnit = () => {
 </script>
 
 <template>
-    <VBtn @click="$api('https://jsonplaceholder.typicode.com/todos/1')">sorov</VBtn>
     <VCard :title="t('unit.title')" class="mb-6">
         <VCardText>
             <VRow>
@@ -123,7 +121,7 @@ const deleteUnit = () => {
 
 
 
-                <IconBtn @click="delateModal = true, itemId = item.id">
+                <IconBtn @click="deleteModal = true, itemId = item.id">
                     <VIcon icon="tabler-trash" color="error" />
                 </IconBtn>
 
@@ -155,5 +153,5 @@ const deleteUnit = () => {
     <AppScrollbar :isDrawerOpen="isDrawerOpen" @update:isDrawerOpen="isDrawerOpen = $event" :fields="customerFields"
         @refresh="refresh" :editItem="itemEdit" @update:editItem="itemEdit = $event" />
 
-    <DelateDialog v-model:delate-modal="delateModal" @delete-element="deleteUnit" />
+    <DelateDialog v-model:delete-modal="deleteModal" @delete-element="deleteUnit" />
 </template>
