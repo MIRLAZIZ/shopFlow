@@ -12,11 +12,14 @@ export const useProductsStore = defineStore('products', {
 
     actions: {
         async fetchProducts(page: number) {
-            const response: ApiResponse<Product> = await $api(`products/${page}`);
+            const response: ApiResponse<Product> = await $api(`products/?page=${page}`);
+
 
             this.products = response.data.data;
-            this.total = response.data.total
-            this.limit = response.data.limit
+            console.log(response.data.data);
+
+            this.total = response.data.meta.total
+            this.limit = response.data.meta.limit
 
         },
 
@@ -37,6 +40,10 @@ export const useProductsStore = defineStore('products', {
                 method: "put",
                 body: data,
             });
+        },
+
+        async fetchOneProduct(id: number) {
+            return await $api(`/products/${id}`);
         },
     }
 });

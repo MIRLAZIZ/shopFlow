@@ -6,6 +6,7 @@ import { useUnitsStore } from '@/@core/stores/units'
 // import { useFormattedInput } from '@/composables/useFormattedInput'
 import { useToastStore } from '@/@core/stores/toast.store'
 import CurrencyInput from '@/components/CurrencyInput.vue'
+import { ErrorType, ProductFormType } from '@/type/products.type'
 import { requiredValidator } from '@core/utils/validators'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -23,19 +24,31 @@ const route = useRoute()
 const productId = (route.params as { id: string }).id
 
 
-const productForm = ref({
+enum PriceMode {
+  UNIFORM = 'UNIFORM',
+  FIFO = 'FIFO'
+}
+
+const productForm = ref<ProductFormType>({
   name: null,
   barcode: null,
   quick_code: null,
-  max_quantity_notification: null as number | null,
-  quantity: null as number | null,
-  unit_id: null as number | null,
-  category_id: null as number | null,
-  purchase_price: null as number | null,
-  selling_price: null as number | null,
-  deliveryCost: null as number | null,
-  vatRate: null as number | null,
-  costPrice: null as number | null,
+  max_quantity_notification: null,
+  quantity: null,
+  unit_id: null,
+  category_id: null,
+  purchase_price: null,
+  selling_price: null,
+  deliveryCost: null,
+  vatRate: null,
+  costPrice: null,
+  pricing_strategy: PriceMode.UNIFORM
+})
+
+const errorMessage = ref<ErrorType>({
+  name: null,
+  barcode: null,
+  quick_code: null,
 })
 
 const isLoading = ref(false)
@@ -44,6 +57,20 @@ const formRef = ref<InstanceType<typeof VForm> | null>(null)
 onMounted(() => {
   unitStore.fetchUnits()
   categoryStore.fetchcategories()
+
+  if (productId) {
+    productStore.fetchOneProduct(Number(productId)).then((response) => {
+      const resmponse = response.data
+      productForm.value.name = resmponse.name
+      productForm.value.barcode = resmponse.barcode
+      productForm.value.quick_code = resmponse.quick_code
+      productForm.value.max_quantity_notification = resmponse.max_quantity_notification
+      productForm.value.unit_id = resmponse.unit.id
+      productForm.value.category_id = resmponse.category.id
+
+
+    })
+  }
 })
 
 
@@ -80,7 +107,7 @@ const saveProduct = () => {
 
       isLoading.value = true
 
-      if (productId) {
+      if (!productId) {
 
         productStore.createProduct(productForm.value).then(() => {
           isLoading.value = false
@@ -92,38 +119,35 @@ const saveProduct = () => {
 
         }).catch((error) => {
           isLoading.value = false
-          toastStore.error(error.response._data.message)
+
+          let parseErorr = JSON.parse(error.response._data.message)
+          errorMessage.value = parseErorr
+          toastStore.showErrors(parseErorr)
+
+
+
+
+          // toastStore.error(error.response._data.message)
         })
 
       } else {
 
-        const obj = {
-          name: 'mirlaziz',
-          age: null
+        const filterProductForm = Object.fromEntries(Object.entries(productForm.value).filter(([key, value]) => value != null))
 
-        }
+        productStore.updataProduct(Number(productId), filterProductForm).then(() => {
+          isLoading.value = false
+          closeNavigationDrawer()
+            .then(() => {
+              toastStore.success('Mahsulot muvaffaqiyatli qo\'shildi')
 
-        const filteredObj = Object.fromEntries(
-          Object.entries(obj).filter(([key, value]) => value !== null)
-        );
-        console.log(filteredObj);
+            })
 
-
-
-
-
-        // productStore.updataProduct(Number(productId), productForm.value).then(() => {
-        //   isLoading.value = false
-        //   closeNavigationDrawer()
-        //     .then(() => {
-        //       toastStore.success('Mahsulot muvaffaqiyatli qo\'shildi')
-
-        //     })
-
-        // }).catch((error) => {
-        //   isLoading.value = false
-        //   toastStore.error(error.response._data.message)
-        // })
+        }).catch((error) => {
+          isLoading.value = false
+          let parseErorr = JSON.parse(error.response._data.message)
+          errorMessage.value = parseErorr
+          toastStore.showErrors(parseErorr)
+        })
 
       }
 
@@ -141,12 +165,14 @@ const saveProduct = () => {
 
 <template>
   <div>
-    {{ productId }}
     <div class="d-flex flex-column justify-center">
-      <h4 class="text-h4 font-weight-medium">
+      <h4 class="text-h4 font-weight-medium" v-if="productId">
+        Mahsulotni tahrirlash
+      </h4>
+      <h4 class="text-h4 font-weight-medium" v-else>
         Yangi mahsulot qo'shish
       </h4>
-      <span class="text-medium-emphasis">Mahsulot ma'lumotlarini kiriting</span>
+
     </div>
 
 
@@ -162,7 +188,7 @@ const saveProduct = () => {
                 <!-- Nomi -->
                 <VCol cols="12" md="6">
                   <AppTextField v-model="productForm.name" label="Mahsulot nomi" placeholder="Masalan: Coca-Cola 0.5L"
-                    :rules="[requiredValidator]" />
+                    :rules="[requiredValidator]" :error-messages="errorMessage.name" />
                 </VCol>
 
                 <!-- categorya -->
@@ -174,13 +200,14 @@ const saveProduct = () => {
 
                 <!-- Barcode -->
                 <VCol cols="12" md="6">
-                  <AppTextField v-model="productForm.barcode" label="Barcode" placeholder="0123-4567" />
+                  <AppTextField v-model="productForm.barcode" label="Barcode" placeholder="0123-4567"
+                    :error-messages="errorMessage.barcode" />
                 </VCol>
 
                 <!-- Quick code -->
                 <VCol cols="12" md="6">
                   <AppTextField v-model="productForm.quick_code" label="Tez kod" placeholder="A1, B2, 99..."
-                    hint="Tez sotish uchun qisqa kod" persistent-hint />
+                    hint="Tez sotish uchun qisqa kod" persistent-hint :error-messages="errorMessage.quick_code" />
                 </VCol>
 
 
@@ -207,7 +234,7 @@ const saveProduct = () => {
 
 
           <!------------------------------------ Narx ma'lumotlari ------------------------------------>
-          <VCard title="Narx ma'lumotlari" v-if="!productId">
+          <VCard title="Narx ma'lumotlari">
             <VCardText>
               <VRow>
 
@@ -288,12 +315,12 @@ const saveProduct = () => {
       </VRow>
 
 
-      <!-- ─── Header ─────────────────────────────────────────── -->
+      <!-- ─── footer ─────────────────────────────────────────── -->
       <div class="d-flex flex-wrap     justify-end  gap-y-4 gap-x-6 mb-6">
 
 
         <div class="d-flex gap-4 align-center  mt-4 ">
-          <VBtn variant="tonal" color="secondary">
+          <VBtn variant="tonal" color="secondary" @click="closeNavigationDrawer">
             Bekor qilish
           </VBtn>
           <VBtn :loading="isLoading" type="submit">

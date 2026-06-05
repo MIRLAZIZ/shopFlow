@@ -14,10 +14,25 @@ export const useToastStore = defineStore("toast", {
         },
         error(message: string) {
             toast.error(message, {
-                autoClose: 3000,
+                autoClose: 5000,
                 theme: 'colored',
             });
         },
+
+        showErrors(errors: Record<string, string>) {
+
+
+            Object.values(errors).forEach((message) => {
+                toast.error(message, {
+                    autoClose: 5000,
+                    theme: 'colored',
+                });
+            });
+        }
+
+
+
+
     }
 }
 

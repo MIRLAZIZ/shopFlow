@@ -15,6 +15,7 @@
   "server_error": "Serverda xato yuz berdi. Iltimos, qayta urinib ko‘ring.",
   "request_timeout": "So‘rov vaqti tugadi. Iltimos, aloqangizni tekshiring.",
   "connection_error": "Aloqa xatosi. Iltimos, tarmogingizni tekshiring.",
+  "loading": "Yuklanmoqda...",
   "headers": {
     "number": "No",
     "name": "Nomi",
