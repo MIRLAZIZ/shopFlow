@@ -11,25 +11,19 @@
 
                         <!-- Xarid narxi -->
                         <VCol cols="12" md="6">
-                            <CurrencyInput v-model="productForm.purchase_price" placeholder="0" label="Xarid narxi"
+                            <CurrencyInput v-model="productBatch.purchase_price" placeholder="0" label="Xarid narxi"
                                 :rules="[requiredValidator]" />
                         </VCol>
 
 
 
-                        <!-- Delivery narxi -->
-                        <VCol cols="12" md="6">
-
-
-                            <CurrencyInput v-model="productForm.deliveryCost" placeholder="0" label="Delivery narxi" />
-                        </VCol>
 
 
                         <!-- miqdori  -->
                         <VCol cols="12" md="6">
 
 
-                            <CurrencyInput v-model="productForm.quantity" placeholder="0" label="Miqdori"
+                            <CurrencyInput v-model="productBatch.quantity" placeholder="0" label="Miqdori"
                                 :rules="[requiredValidator]" />
                         </VCol>
 
@@ -37,14 +31,22 @@
                         <!-- Sotuv narxi -->
                         <VCol cols="12" md="6">
 
-                            <CurrencyInput v-model="productForm.selling_price" placeholder="0" label="Sotuv narxi"
+                            <CurrencyInput v-model="productBatch.selling_price" placeholder="0" label="Sotuv narxi"
                                 :rules="[requiredValidator]" />
 
                         </VCol>
 
+
+                        <!-- Delivery narxi -->
+                        <VCol cols="12" md="6">
+
+
+                            <CurrencyInput v-model="productBatch.deliveryCost" placeholder="0" label="Delivery narxi" />
+                        </VCol>
+
                         <!-- Vat rate -->
                         <VCol cols="12" md="6">
-                            <CurrencyInput v-model="productForm.vatRate" placeholder="0" label="Vat rate" />
+                            <CurrencyInput v-model="productBatch.vatRate" placeholder="0" label="Vat rate" />
                         </VCol>
 
                         <!-- cost price  -->
@@ -94,6 +96,7 @@
 
 <script setup lang="ts">
 import { useProductsStore } from '@/@core/stores/products';
+import { useToastStore } from '@/@core/stores/toast.store';
 import { requiredValidator } from '@core/utils/validators';
 import { useRoute, useRouter } from 'vue-router';
 import { VForm } from 'vuetify/lib/components/index.mjs';
@@ -102,7 +105,9 @@ const router = useRouter()
 const route = useRoute()
 const routeSlug = (route.params as { slug: string }).slug
 const store = useProductsStore()
-
+const productId = ref(null)
+const toastStore = useToastStore()
+const batchId = ref(null)
 
 
 enum PriceMode {
@@ -112,7 +117,7 @@ enum PriceMode {
 const formRef = ref<InstanceType<typeof VForm> | null>(null)
 
 
-const productForm = ref({
+const productBatch = ref({
 
     quantity: null,
     purchase_price: null,
@@ -120,17 +125,18 @@ const productForm = ref({
     deliveryCost: null,
     vatRate: null,
     costPrice: null,
+    product_id: null
 })
 
-const saveProduct = () => {
-    console.log('ishladi')
-}
+
+
+
 
 const computedCostPrice = computed(() => {
-    const purchase = productForm.value.purchase_price ?? 0
-    const delivery = productForm.value.deliveryCost ?? 0
-    const vat = productForm.value.vatRate ?? 0
-    const quantity = productForm.value.quantity ?? 0
+    const purchase = productBatch.value.purchase_price ?? 0
+    const delivery = productBatch.value.deliveryCost ?? 0
+    const vat = productBatch.value.vatRate ?? 0
+    const quantity = productBatch.value.quantity ?? 0
 
     if (!purchase && !quantity) return 0
 
@@ -150,9 +156,86 @@ const closeNavigationDrawer = async () => {
 
 onMounted(() => {
 
+    if (routeSlug) {
+        store.searchProduct({ name: routeSlug }).then((response) => {
+            productBatch.value.product_id = response.data[0].id
+        })
+    }
+
 
 })
 
+
+
+
+const saveProduct = () => {
+
+    formRef.value?.validate().then(({ valid }) => {
+
+        if (valid) {
+
+            console.log('ishladi');
+
+
+            isLoading.value = true
+
+            if (!batchId.value) {
+                console.log('if');
+
+                const { costPrice, ...filterProductForm } = productBatch.value
+                store.createBatch(filterProductForm).then(() => {
+                    console.log(productBatch.value);
+
+                    isLoading.value = false
+                    closeNavigationDrawer()
+                        .then(() => {
+                            toastStore.success('Mahsulot muvaffaqiyatli qo\'shildi')
+
+                        })
+
+                }).catch((error) => {
+                    isLoading.value = false
+
+                    // let parseErorr = JSON.parse(error.response._data.message)
+                    // errorMessage.value = parseErorr
+                    toastStore.showErrors(error.response._data.message)
+
+
+
+
+                    // toastStore.error(error.response._data.message)
+                })
+
+            } else {
+                console.log('else');
+
+                const filterProductForm = Object.fromEntries(Object.entries(productBatch.value).filter(([key, value]) => value != null))
+
+                store.updataProduct(Number(productId), filterProductForm).then(() => {
+                    isLoading.value = false
+                    closeNavigationDrawer()
+                        .then(() => {
+                            toastStore.success('Mahsulot muvaffaqiyatli qo\'shildi')
+
+                        })
+
+                }).catch((error) => {
+                    isLoading.value = false
+                    // let parseErorr = JSON.parse(error.response._data.message)
+                    // errorMessage.value = parseErorr
+                    toastStore.showErrors(error.response._data.message)
+                })
+
+            }
+
+
+        }
+
+
+    })
+
+
+}
 </script>
 
 <style scoped></style>

@@ -46,6 +46,7 @@ declare module 'vue-router/auto/routes' {
     'not-authorized': RouteRecordInfo<'not-authorized', '/not-authorized', Record<never, never>, Record<never, never>>,
     'products': RouteRecordInfo<'products', '/products', Record<never, never>, Record<never, never>>,
     'products-slug-batches-create': RouteRecordInfo<'products-slug-batches-create', '/products/:slug/batches/create', { slug: ParamValue<true> }, { slug: ParamValue<false> }>,
+    'products-batch-id': RouteRecordInfo<'products-batch-id', '/products/batch/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'products-create': RouteRecordInfo<'products-create', '/products/create', Record<never, never>, Record<never, never>>,
     'products-edit-id': RouteRecordInfo<'products-edit-id', '/products/edit/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'units': RouteRecordInfo<'units', '/units', Record<never, never>, Record<never, never>>,

@@ -7,7 +7,7 @@ export const useProductsStore = defineStore('products', {
         products: [] as Product[],
         page: 1,
         total: 0,
-        limit: 0
+        limit: 1
     }),
 
     actions: {
@@ -45,5 +45,38 @@ export const useProductsStore = defineStore('products', {
         async fetchOneProduct(id: number) {
             return await $api(`/products/${id}`);
         },
+        async searchProduct({ name, barcode, quickCode }: {
+            name?: string,
+            barcode?: string,
+            quickCode?: string
+        } = {}) {
+            const params = new URLSearchParams();
+
+            if (name) params.append('name', name);
+            if (barcode) params.append('barcode', barcode);
+            if (quickCode) params.append('quickCode', quickCode);
+
+            const query = params.toString();
+            return await $api(`/products/search${query ? `?${query}` : ''}`);
+        },
+
+        async createBatch(data: any) {
+            console.log(data);
+
+            return await $api("/products/batch", {
+                method: "post",
+                body: data,
+            });
+        },
+
+        // get batch by product id and page
+        async getBatchByProductId(id: number, page: number) {
+            return await $api(`/products/${id}/batches?page=${page}`);
+        },
+
+
+
+
+
     }
 });

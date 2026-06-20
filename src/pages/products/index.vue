@@ -1,7 +1,7 @@
 <template>
   <div>
     <pre>
-      {{ store.products }}
+      <!-- {{ store.products }} -->
     </pre>
     <!-- 👉 products -->
     <VCard title="Filters" class="mb-6 ">
@@ -73,7 +73,12 @@
 <!-- Actions -->
 <template #item.actions="{ item }">
 
-  <IconBtn @click="goBatchs(item.name, item.id)">
+  <IconBtn @click="router.push(`/products/batch/${item.id}`)">
+    <VIcon icon="tabler-manual-gearbox" color="success" />
+
+  </IconBtn>
+
+  <IconBtn @click="router.push(`/products/${item.name}/batches/create`)">
     <VIcon icon="tabler-plus" color="success" />
 
   </IconBtn>
@@ -180,15 +185,7 @@ const refresh = () => {
 
 }
 
-const goBatchs = (slug: string, productid: number) => {
-  router.push({
-    path: `/products/${slug}/batches/create`,
-    params: {
-      id: productid
-    }
-  })
 
-}
 
 onMounted(() => {
   refresh()
